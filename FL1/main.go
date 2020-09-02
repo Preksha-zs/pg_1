@@ -1,12 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"database/sql"
+	"fmt"
+	ph "github.com/Preksha-zs/FL1/http/fav_loc"
 	ps "github.com/Preksha-zs/FL1/service/fav_loc"
 	pst "github.com/Preksha-zs/FL1/store/fav_loc"
 	_ "github.com/lib/pq"
+	"gitlab.kroger.com/platform/krogo/pkg/krogo"
+	"os"
 )
+
 func createConnection() *sql.DB {
 
 	// Open the connection
@@ -28,9 +32,15 @@ func createConnection() *sql.DB {
 	// return the connection
 	return db
 }
-func main(){
-	db:=createConnection()
- 	store:=pst.New(db)
- 	service:=ps.New(store)
- 	fmt.Println(service)
- }
+func main() {
+	k := krogo.New()
+	k.Server.HTTP.Port = 9090
+	db := createConnection()
+	store := pst.New(db)
+	service := ps.New(store)
+	Handler := ph.New(service)
+	k.POST("/FL1", Handler.Create)
+	k.GET("/FL1/{id}", Handler.Read)
+	k.DELETE("/FL1/{id}", Handler.Delete)
+	k.Start()
+}
