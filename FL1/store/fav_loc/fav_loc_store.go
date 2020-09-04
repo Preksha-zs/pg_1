@@ -7,40 +7,65 @@ import (
 	"github.com/Preksha-zs/FL1/store"
 	"log"
 )
-type fav_loc struct{
+
+type fav_loc struct {
 	db *sql.DB
 }
+
 func New(db *sql.DB) store.Fav_loc {
-	return &fav_loc{}
+	return &fav_loc{db}
 }
-func (p *fav_loc)InsertFavLoc(favLoc models.Fav_loc) int64 {
+func (p *fav_loc) InsertFavLoc(favLoc *models.Fav_loc) *models.Fav_loc {
+
+	//fmt.Println("i am here")
+
+	//fmt.Println(favLoc.Name)
+
 	sqlStatement := `INSERT INTO fav_loc (name, lat, long) VALUES ($1, $2, $3) RETURNING fav_loc_id`
 
-	// the inserted id will store in this id
+	//fmt.Println("99999999999999999999999999999999")
 	var id int64
-
-	// execute the sql statement
-	// Scan function will save the insert id in the id
 	err := p.db.QueryRow(sqlStatement, favLoc.Name, favLoc.Lat, favLoc.Long).Scan(&id)
-
 	if err != nil {
 		log.Fatalf("Unable to execute the query. %v", err)
 	}
+	favLoc.ID = id
+	//:= p.db.QueryRow(sqlStatement, favLoc.Name, favLoc.Lat, favLoc.Long).Scan(&id)
 
-	fmt.Printf("Inserted a single record %v", id)
+	//fmt.Println(i, "hello")
 
-	// return the inserted id
-	return id
+	//fmt.Println(p)
+
+	//fmt.Println("a88888888888888")
+
+	//fmt.Println(p.db)
+
+	//k := createConnection()
+
+	//res, err := p.db.Exec(`INSERT INTO fav_loc (name, lat, long) VALUES ($1, $2, $3) RETURNING fav_loc_id`,
+	//	favLoc.Name, favLoc.Lat, favLoc.Long)
+
+	//var r, _ = p.db.Exec(sqlStatement, favLoc.Name, favLoc.Lat, favLoc.Long)
+
+	//fmt.Println(res)
+
+	//	fmt.Println("finisssssssuusususuususususuususususu")
+
+	//if err != nil {
+	//	log.Fatalf("Unable to execute the query. %v", err)
+	//}
+	//fmt.Printf("Inserted a single record %v", id)
+	//fmt.Println(res)
+	return favLoc
 }
-
-func (p *fav_loc)GetFavLoc(id int64) (models.Fav_loc, error) {
+func (p *fav_loc) GetFavLoc(id int64) (models.Fav_loc, error) {
 	var favLoc models.Fav_loc
 
 	sqlStatement := `SELECT * FROM fav_loc WHERE fav_loc_id=$1`
+	fmt.Println("hello im in getfavloc function")
+	err := p.db.QueryRow(sqlStatement, id).Scan(&favLoc.ID, &favLoc.Name, &favLoc.Lat, &favLoc.Long)
 
-	row := p.db.QueryRow(sqlStatement, id)
-
-	err := row.Scan(&favLoc.ID, &favLoc.Name, &favLoc.Lat, &favLoc.Long)
+	//err := k.Scan(&favLoc.ID, &favLoc.Name, &favLoc.Lat, &favLoc.Long)
 
 	switch err {
 	case sql.ErrNoRows:
@@ -51,11 +76,9 @@ func (p *fav_loc)GetFavLoc(id int64) (models.Fav_loc, error) {
 	default:
 		log.Fatalf("Unable to scan the row. %v", err)
 	}
-
 	return favLoc, err
 }
-
-func (p *fav_loc)GetAllFavLoc() ([]models.Fav_loc, error) {
+func (p *fav_loc) GetAllFavLoc() ([]models.Fav_loc, error) {
 	var favLocs []models.Fav_loc
 
 	// create the select sql query
@@ -89,31 +112,35 @@ func (p *fav_loc)GetAllFavLoc() ([]models.Fav_loc, error) {
 	return favLocs, err
 }
 
-func (p *fav_loc)UpdateFavLoc(id int64, favLoc models.Fav_loc) int64 {
-
+func (p *fav_loc) UpdateFavLoc(id int64, favLoc *models.Fav_loc) *models.Fav_loc {
+	fmt.Println("im in update function")
 	sqlStatement := `UPDATE fav_loc SET name=$2, lat=$3, long=$4 WHERE fav_loc_id=$1`
-
-	// execute the sql statement
+	//err := p.db.QueryRow(sqlStatement, id).Scan(&favLoc.ID, &favLoc.Name, &favLoc.Lat, &favLoc.Long)
+	//// execute the sql statement
 	res, err := p.db.Exec(sqlStatement, id, favLoc.Name, favLoc.Lat, favLoc.Long)
-
+	fmt.Println("im in update function")
+	//if err != nil {
+	//	log.Fatalf("Unable to execute the query. %v", err)
+	//}
+	//var id int64
+	//err := p.db.QueryRow(sqlStatement, favLoc.Name, favLoc.Lat, favLoc.Long).Scan(&id)
 	if err != nil {
 		log.Fatalf("Unable to execute the query. %v", err)
 	}
+	//favLoc.ID = id
+	//// check how many rows affected
+	//rowsAffected, err := res.RowsAffected()
 
-	// check how many rows affected
-	rowsAffected, err := res.RowsAffected()
+	//	if err != nil {
+	//		log.Fatalf("Error while checking the affected rows. %v", err)
+	//	}
 
-	if err != nil {
-		log.Fatalf("Error while checking the affected rows. %v", err)
-	}
-
-	fmt.Printf("Total rows/record affected %v", rowsAffected)
-
-	return rowsAffected
+	//	fmt.Printf("Total rows/record affected %v", rowsAffected)
+	fmt.Println(res)
+	fmt.Println("im in kjgbkj update function")
+	return favLoc
 }
-
-// delete user in the DB
-func (p *fav_loc)DeleteFavLoc(id int64) int64 {
+func (p *fav_loc) DeleteFavLoc(id int64) int64 {
 	sqlStatement := `DELETE FROM fav_loc WHERE fav_loc_id=$1`
 
 	// execute the sql statement
@@ -128,9 +155,9 @@ func (p *fav_loc)DeleteFavLoc(id int64) int64 {
 
 	if err != nil {
 		log.Fatalf("Error while checking the affected rows. %v", err)
+	} else {
+		fmt.Println("Successfully deleted")
 	}
-
 	fmt.Printf("Total rows/record affected %v", rowsAffected)
-
 	return rowsAffected
 }
